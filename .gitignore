@@ -1,0 +1,43 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+out/
+
+# Rider
+.idea/
+
+# npm / React
+node_modules/
+build/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Database
+*.mdf
+*.ldf
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Dotnet publish
+publish/
