@@ -1,8 +1,10 @@
 ﻿
+using TickVento.Domain.Enums;
 
 namespace TickVento.Application.Features.Events.CreateEvent;
-public record CreateEventResult
-(
+public record CreateEventResult(
     Guid EventId,
-    string Title
+    string Title,
+    Dictionary<SeatCategory, int> SeatsPerCategory
 );
+
