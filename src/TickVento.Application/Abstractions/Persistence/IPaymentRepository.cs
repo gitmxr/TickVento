@@ -7,13 +7,11 @@ using TickVento.Domain.Entities;
 
 namespace TickVento.Application.Abstractions.Persistence
 {
-    public interface IBookingRepository
+    public interface IPaymentRepository
     {
-        Task<Booking?> GetByIdAsync(Guid id);
-        Task AddAsync(Booking booking);
-        Task UpdateAsync(Booking booking);  
+        public Task AddAsync(Payment payment);
+        public Task<Payment?> GetByBookingIdAsync(Guid bookingId);
+        public Task UpdateAsync(Payment payment);
 
     }
 }
-
-

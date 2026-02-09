@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace TickVento.Application.Abstractions.Persistence
 {
-    public interface IUnitOfWorkRepository
+    public interface IUnitOfWork
     {
+        Task BeginAsync();
+        Task CommitAsync();
+        Task RollbackAsync();
     }
 }

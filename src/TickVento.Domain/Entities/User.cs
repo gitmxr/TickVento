@@ -26,8 +26,8 @@ namespace TickVento.Domain.Entities
         public User(string email, string fullName, UserRole role)
         {
             Id = Guid.NewGuid();
-            Email = email;
-            FullName = fullName;
+            Email = email ?? throw new ArgumentNullException(nameof(email));
+            FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
             Role = role;
             IsActive = true;
             CreatedAt = DateTime.UtcNow;
