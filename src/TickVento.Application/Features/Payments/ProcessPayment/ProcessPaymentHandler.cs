@@ -10,12 +10,14 @@ namespace TickVento.Application.Features.Payments.ProcessPayment
     public class ProcessPaymentHandler(
         IBookingRepository bookingRepository,
         IPaymentRepository paymentRepository,
-        IPaymentGateway paymentGateway
+        IPaymentGateway paymentGateway,
+        IUnitOfWork unitOfWork
         )
     {
         private readonly IBookingRepository _bookingRepository = bookingRepository;
         private readonly IPaymentRepository _paymentRepository = paymentRepository;
         private readonly IPaymentGateway _paymentGateway = paymentGateway;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<PaymentResult> Handle(ProcessPaymentCommand command)
         {
@@ -40,93 +42,69 @@ namespace TickVento.Application.Features.Payments.ProcessPayment
             // Calculate Payment Amount
             var totalAmount = booking.Seats.Sum(seat => 
                 booking.Event.GetPriceForCategory(seat.Category));
-
+           
+            //Validate amount (sandbox rules)
             if (totalAmount <= 0 || totalAmount > 100_000)
                 throw new BusinessRuleException("This payment Cannot be Processed.");
-
-            //Create Payment (Pending)
-            var payment = new Payment(
-                totalAmount,
-                booking,
-                command.Method
-            );
-
-            //Persist payment 
-            await _paymentRepository.AddAsync( payment );
-
-            //Call Sandbox Payment Gateway
-
-            // create request 
-            var paymentRequest = new PaymentRequest(
-                booking.Id,
-                totalAmount,
-                command.Method
-            );
-            PaymentResult result = await _paymentGateway.ChargeAsync(paymentRequest);
-
-            // Store and return payment Result 
-
-            if (result.IsSuccessful)
+            
+            // Begin uow
+            await _unitOfWork.BeginAsync();
+            
+            try
             {
-                // update Payment status
-                payment.MarkAsSuccessful();
+                //Create Payment (Pending)
+                var payment = new Payment(
+                    totalAmount,
+                    booking,
+                    command.Method
+                );
 
-                // update booking Status
-                booking.ConfirmBooking();
-                
-                // persist changes 
+                //Persist payment 
                 await _paymentRepository.AddAsync(payment);
+
+                //Call Sandbox Payment Gateway
+
+                // create request 
+                var paymentRequest = new PaymentRequest(
+                    booking.Id,
+                    totalAmount,
+                    command.Method
+                );
+
+                PaymentResult result = await _paymentGateway.ChargeAsync(paymentRequest);
+
+                // Store and return payment Result 
+                if (result.IsSuccessful)
+                {
+                    // update Payment status
+                    payment.MarkAsSuccessful(result.TransactionId!);
+
+                    // update booking Status
+                    booking.ConfirmBooking();
+                }
+                else
+                {
+                    //update Payment Status
+                    payment.MarkAsFailed(result.FailureReason, result.TransactionId);
+
+                    //update booking status 
+                    booking.CancelBooking();
+                }
+
+                // persist changes 
+                await _paymentRepository.UpdateAsync(payment);
                 await _bookingRepository.UpdateAsync(booking);
+
+                // commit uow
+                await _unitOfWork.CommitAsync();
+
+                return result;
             }
-            else
+            catch
             {
-                //update Payment Status
-                payment.MarkAsFailed();
-
-                //update booking status 
-                booking.CancelBooking();
-
-                // persist changes 
-                await _paymentRepository.AddAsync(payment);
-                await _bookingRepository.UpdateAsync(booking);
+                await _unitOfWork.RollbackAsync();
+                throw;
             }
-
-            return result;
         }
     }
 }
-//Load the Booking
-
-//Ensure booking is still Pending
-
-//Calculate payment amount
-
-//Call Payment Gateway
-
-//Based on result:
-
-//Success → Confirm Booking + Book seats
-
-//Failure → Cancel Booking + Release seats
-
-//Save everything atomically
-
-//The handler does NOT:
-
-//Change seat status directly
-
-//Bypass domain methods
-
-//Talk to EF / DB details
-
-
-//No linq method 
-//bool isAllSeatReserved = true;
-//foreach(var seat in booking.Seats)
-//{
-//    if (seat.Status != SeatStatus.Reserved)
-//    {
-//        isAllSeatReserved = false;
-//        break;
-//    }
-//}

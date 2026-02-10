@@ -16,7 +16,6 @@ namespace TickVento.Domain.Entities
         public string SeatNumber { get; private set; }
         public SeatCategory Category { get; private set; }
         public SeatStatus Status { get; private set; }
-
         public Seat() { }
         public Seat(string seatNumber, SeatCategory category , Guid eventId)
         {
@@ -27,8 +26,7 @@ namespace TickVento.Domain.Entities
             EventId = eventId;
             SeatNumber = seatNumber;
             Category = category; 
-            Status = SeatStatus.Available;
-            
+            Status = SeatStatus.Available;        
         }
         public void Reserve()
         { 
