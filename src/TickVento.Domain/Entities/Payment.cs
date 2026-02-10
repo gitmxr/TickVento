@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
 using TickVento.Domain.Enums;
 
 namespace TickVento.Domain.Entities
@@ -16,6 +17,9 @@ namespace TickVento.Domain.Entities
         public DateTime PaidAt { get; private set; }
         public PaymentMethod Method { get; private set; }
         public PaymentStatus Status { get; private set; }
+        public string? TransactionId { get; private set; }
+        public string? FailureReason { get; private set; }
+
 
         public Payment() { }
 
@@ -35,21 +39,25 @@ namespace TickVento.Domain.Entities
             Method = method;
             Status = PaymentStatus.Pending;
         }
-        public void MarkAsSuccessful()
+        public void MarkAsSuccessful(string transactionId)
         {
-            if(Status != PaymentStatus.Pending)
+            if (Status != PaymentStatus.Pending)
                 throw new InvalidOperationException("Payment already processed.");
 
             Status = PaymentStatus.Completed;
             PaidAt = DateTime.UtcNow;
+            TransactionId = transactionId;
         }
-        public void MarkAsFailed() 
+        public void MarkAsFailed(string failureReason, string? transactionId = null)
         {
             if (Status != PaymentStatus.Pending)
                 return;
 
             Status = PaymentStatus.Failled;
             PaidAt = DateTime.UtcNow;
+            FailureReason = failureReason;
+            TransactionId = transactionId;
         }
+
     }
 }

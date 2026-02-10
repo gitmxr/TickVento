@@ -1,8 +1,6 @@
 ﻿using TickVento.Application.Abstractions.Persistence;
+using TickVento.Application.Features.Events.CreateEvent;
 using TickVento.Domain.Entities;
-using TickVento.Domain.Enums;
-
-namespace TickVento.Application.Features.Events.CreateEvent;
 
 public class CreateEventHandler
 {
@@ -18,35 +16,42 @@ public class CreateEventHandler
         if (command is null)
             throw new ArgumentNullException(nameof(command));
 
-        // 1. Create Venue
-        var venue = new Venue(
-            command.VenueName,
-            command.TotalSeats
-        );
+        //  Calculate total capacity from category counts
+        var totalCapacity = command.SeatCategoryCounts.Values.Sum();
 
-        // 2. Create Event (aggregate root)
+        //  Create Venue
+        var venue = new Venue(command.VenueName, totalCapacity);
+
+        //  Create Event (aggregate root)
         var newEvent = new Event(
             command.Title,
             command.Description,
             venue,
-            command.EventDate
+            command.EventDate,
+            command.SeatPrices
         );
 
-        // 3. Create Seats through Event behavior
-        for (int i = 1; i <= command.TotalSeats; i++)
+        //  Generate seats per category
+        foreach (var categoryCount in command.SeatCategoryCounts)
         {
-            newEvent.AddSeat(
-                seatNumber: i.ToString(),
-                category: SeatCategory.Regular
-            );
+            var category = categoryCount.Key;
+            var count = categoryCount.Value;
+
+            for (int i = 1; i <= count; i++)
+            {
+                string seatNumber = $"{category.ToString().Substring(0, 1).ToUpper()}{i}";
+                newEvent.AddSeat(seatNumber, category);
+            }
         }
 
-        // 4. Persist aggregate
+        //  Persist aggregate
         await _eventRepository.AddAsync(newEvent);
 
+        //  Return result including seats per category
         return new CreateEventResult(
             newEvent.Id,
-            newEvent.Title
+            newEvent.Title,
+            command.SeatCategoryCounts
         );
     }
 }
