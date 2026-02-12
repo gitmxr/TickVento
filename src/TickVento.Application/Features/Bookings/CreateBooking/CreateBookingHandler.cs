@@ -10,15 +10,19 @@ namespace TickVento.Application.Features.Bookings.CreateBooking
         private readonly IUserRepository _userRepository;
         private readonly IEventRepository _eventRepository;
         private readonly IBookingRepository _bookingRepository;
+        private readonly IUnitOfWork _unitOfWork;
+
         public CreateBookingHandler(
             IUserRepository userRepository,
             IEventRepository eventRepository,
-            IBookingRepository bookingRepository
+            IBookingRepository bookingRepository,
+            IUnitOfWork unitOfWork
             )
         {
             _userRepository = userRepository;
             _eventRepository = eventRepository;
             _bookingRepository = bookingRepository;
+            _unitOfWork = unitOfWork;
         }
         public async Task<CreateBookingResult> Handle(CreateBookingCommand command)
         {
@@ -66,23 +70,35 @@ namespace TickVento.Application.Features.Bookings.CreateBooking
             
             if(!allSeatAvailable)
                 throw new BusinessRuleException("One or more selected seats are not available.");
-            
-            // Create a new Booking 
-            var booking = new Booking(
-                user,
-                @event,
-                selectedSeats
-            );
-            
-            // save Booking 
-            await _bookingRepository.AddAsync(booking);
 
-            // retun results 
-            return new CreateBookingResult(
-                booking.Id,
-                booking.Event.Title,
-                selectedSeats.Select(s => s.SeatNumber)
-            );
+            // uow of Work begins here 
+            await _unitOfWork.BeginAsync();
+
+            try
+            {
+                // Create a new Booking 
+                var booking = new Booking(
+                    user,
+                    @event,
+                    selectedSeats
+                );
+                // save Booking 
+                await _bookingRepository.AddAsync(booking);
+
+                // retun results 
+                return new CreateBookingResult(
+                    booking.Id,
+                    booking.Event.Title,
+                    selectedSeats.Select(s => s.SeatNumber)
+                );
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
+            
+            
         }
     }
 }
