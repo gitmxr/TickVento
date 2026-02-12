@@ -45,23 +45,27 @@ namespace TickVento.Domain.Entities
                 throw new ArgumentException("One or more seats are not available.");
 
             foreach (var seat in Seats)
-                seat.Reserve();
+                seat.Reserve(Id);
         }
         public void ConfirmBooking()
         {
             if (Status != BookingStatus.Pending)
-                throw new ArgumentException("Booking cannot confirm wihout Payment!");
+                throw new InvalidOperationException("Only pending booking can be confirmed.");
+
+            Status = BookingStatus.Confirmed;
+
             foreach (var seat in Seats)
                 seat.Book();
-            Status = BookingStatus.Confirmed;
         }
         public void CancelBooking()
         {
-            if (Status == BookingStatus.Cancelled)
-                return;
+            if (Status == BookingStatus.Confirmed)
+                throw new InvalidOperationException("Confirmed booking cannot be cancelled.");
+
+            Status = BookingStatus.Cancelled;
+
             foreach (var seat in Seats)
                 seat.Release();
-            Status = BookingStatus.Cancelled;
         }
     }
 }

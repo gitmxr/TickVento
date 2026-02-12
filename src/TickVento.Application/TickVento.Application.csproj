@@ -10,10 +10,4 @@
     <ProjectReference Include="..\TickVento.Domain\TickVento.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Abstractions\Payments\" />
-    <Folder Include="Features\" />
-    <Folder Include="Common\" />
-  </ItemGroup>
-
 </Project>

@@ -16,6 +16,9 @@ namespace TickVento.Domain.Entities
         public string SeatNumber { get; private set; }
         public SeatCategory Category { get; private set; }
         public SeatStatus Status { get; private set; }
+        public Guid? BookingId { get; private set; }
+        public Booking? Booking { get; private set; }
+
         public Seat() { }
         public Seat(string seatNumber, SeatCategory category , Guid eventId)
         {
@@ -28,20 +31,29 @@ namespace TickVento.Domain.Entities
             Category = category; 
             Status = SeatStatus.Available;        
         }
-        public void Reserve()
-        { 
-            if(Status == SeatStatus.Available)
-                Status = SeatStatus.Reserved;
-        }  
-        public void Book() 
+        public void Reserve(Guid bookingId)
         {
-            if (Status == SeatStatus.Reserved)
-                Status = SeatStatus.Booked;
-        }     
-        public void Release() 
-        {
-            if (Status == SeatStatus.Reserved)
-                Status = SeatStatus.Available;
+            if (Status != SeatStatus.Available)
+                throw new InvalidOperationException("Seat is not available.");
+
+            Status = SeatStatus.Reserved;
+            BookingId = bookingId;
         }
+        public void Book()
+        {
+            if (Status != SeatStatus.Reserved)
+                throw new InvalidOperationException("Seat must be reserved before booking.");
+
+            Status = SeatStatus.Booked;
+        }
+        public void Release()
+        {
+            if (Status == SeatStatus.Reserved)
+            {
+                Status = SeatStatus.Available;
+                BookingId = null;
+            }
+        }
+
     }
 }
