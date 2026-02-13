@@ -39,7 +39,6 @@ namespace TickVento.Infrastructure.Persistence.Configurations
                 .WithOne(s => s.Booking)
                 .HasForeignKey(s => s.BookingId)
                 .OnDelete(DeleteBehavior.SetNull);
-
         }
     }
 }

@@ -10,6 +10,7 @@ namespace TickVento.Infrastructure.Persistence.Data
         public DbSet<Event> Events => Set<Event>();
         public DbSet<Venue> Venues => Set<Venue>();
         public DbSet<Seat> Seats => Set<Seat>();
+        public DbSet<EventSeatPrice> EventSeatPrices => Set<EventSeatPrice>();
         public DbSet<Booking> Bookings => Set<Booking>();
         public DbSet<Payment> Payments => Set<Payment>();
 
