@@ -16,7 +16,8 @@ namespace TickVento.Infrastructure.Persistence.Configurations
 
             // Amount
             builder.Property(p => p.Amount)
-                .IsRequired();
+                .IsRequired()
+                .HasPrecision(18, 2);
 
             // Status
             builder.Property(p => p.Status)

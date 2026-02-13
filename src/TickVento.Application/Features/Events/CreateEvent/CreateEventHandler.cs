@@ -27,9 +27,17 @@ public class CreateEventHandler
             command.Title,
             command.Description,
             venue,
-            command.EventDate,
-            command.SeatPrices
+            command.EventDate
         );
+        // Map command seat prices to EventSeatPrice entities
+        foreach (var kvp in command.SeatPrices)
+        {
+            var category = kvp.Key;
+            var price = kvp.Value;
+
+            var seatPrice = new EventSeatPrice(newEvent, category, price);
+            newEvent.SeatPrices.Add(seatPrice);
+        }
 
         //  Generate seats per category
         foreach (var categoryCount in command.SeatCategoryCounts)
@@ -39,7 +47,7 @@ public class CreateEventHandler
 
             for (int i = 1; i <= count; i++)
             {
-                string seatNumber = $"{category.ToString().Substring(0, 1).ToUpper()}{i}";
+                string seatNumber = $"{category.ToString()[0].ToString().ToUpper()}{i}";
                 newEvent.AddSeat(seatNumber, category);
             }
         }

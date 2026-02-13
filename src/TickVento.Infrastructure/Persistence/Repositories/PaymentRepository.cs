@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TickVento.Infrastructure.Persistence.Repositories;
 
-internal class PaymentRepository(TickVentoDbContext dbContext) : IPaymentRepository
+public class PaymentRepository(TickVentoDbContext dbContext) : IPaymentRepository
 {
     private readonly TickVentoDbContext _dbContext = dbContext;
     

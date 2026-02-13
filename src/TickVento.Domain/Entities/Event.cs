@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using TickVento.Domain.Enums;
+﻿using TickVento.Domain.Enums;
 
 namespace TickVento.Domain.Entities
 {
@@ -15,19 +12,18 @@ namespace TickVento.Domain.Entities
         public Venue Venue { get; private set; }
         public ICollection<Seat> Seats { get; private set; }
         public ICollection<Booking> Bookings { get; private set; }
+        public ICollection<EventSeatPrice> SeatPrices { get; private set; } // Updated
 
-        // ✅ New: Seat prices per category
-        public Dictionary<SeatCategory, decimal> SeatPrices { get; private set; }
-
+        // Parameterless constructor for EF
         public Event()
         {
             Seats = new List<Seat>();
             Bookings = new List<Booking>();
-            SeatPrices = new Dictionary<SeatCategory, decimal>();
+            SeatPrices = new List<EventSeatPrice>();
         }
 
-        // Updated constructor
-        public Event(string title, string description, Venue venue, DateTime eventDate, Dictionary<SeatCategory, decimal>? seatPrices = null)
+        // Main constructor
+        public Event(string title, string description, Venue venue, DateTime eventDate, IEnumerable<EventSeatPrice>? seatPrices = null)
         {
             if (string.IsNullOrWhiteSpace(title))
                 throw new ArgumentException("Event title cannot be empty.");
@@ -49,9 +45,10 @@ namespace TickVento.Domain.Entities
             Bookings = new List<Booking>();
 
             // Initialize seat prices
-            SeatPrices = seatPrices ?? new Dictionary<SeatCategory, decimal>();
+            SeatPrices = seatPrices?.ToList() ?? new List<EventSeatPrice>();
         }
 
+        // Update event details
         public void UpdateEventDetail(string title, string description, Venue venue, DateTime eventDate)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -70,6 +67,7 @@ namespace TickVento.Domain.Entities
             EventDate = eventDate;
         }
 
+        // Add a seat
         public void AddSeat(string seatNumber, SeatCategory category)
         {
             if (Seats.Any(s => s.SeatNumber == seatNumber))
@@ -79,16 +77,17 @@ namespace TickVento.Domain.Entities
             Seats.Add(seat);
         }
 
-        // ✅ New: Get price for a seat category
+        // Get price for a seat category
         public decimal GetPriceForCategory(SeatCategory category)
         {
-            if (!SeatPrices.TryGetValue(category, out var price))
+            var priceEntity = SeatPrices.FirstOrDefault(sp => sp.Category == category);
+            if (priceEntity == null)
                 throw new ArgumentException("Seat category is not priced for this event.");
 
-            return price;
+            return priceEntity.Price;
         }
 
-        // ✅ New: Add seats automatically based on category distribution
+        // Generate seats automatically based on category distribution
         public void GenerateSeats(Dictionary<SeatCategory, int> categoryCounts)
         {
             foreach (var kvp in categoryCounts)

@@ -85,6 +85,8 @@ namespace TickVento.Application.Features.Bookings.CreateBooking
                 // save Booking 
                 await _bookingRepository.AddAsync(booking);
 
+                await _unitOfWork.CommitAsync();
+
                 // retun results 
                 return new CreateBookingResult(
                     booking.Id,

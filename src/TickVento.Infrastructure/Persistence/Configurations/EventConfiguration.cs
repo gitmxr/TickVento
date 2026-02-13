@@ -46,6 +46,13 @@ namespace TickVento.Infrastructure.Persistence.Configurations
                 .WithOne(s => s.Event)
                 .HasForeignKey(s => s.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            // Relationship to EventSeatPrice
+            builder.HasMany(e => e.SeatPrices)
+                   .WithOne(sp => sp.Event)
+                   .HasForeignKey(sp => sp.EventId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
 
             // Index
             builder.HasIndex(e => e.EventDate);
